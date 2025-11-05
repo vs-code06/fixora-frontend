@@ -33,9 +33,10 @@ const Hero = () => {
                 <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2.5 rounded-lg shadow-sm transition">
                   Book a Service →
                 </button>
-                <button className="border-2 border-gray-900 px-6 py-2.5 rounded-lg hover:bg-gray-100 font-semibold transition">
+                <button className="border-2 border-gray-900 px-6 py-2.5 rounded-lg font-semibold text-gray-900 bg-transparen hover:bg-gray-900 hover:text-white transition-all duration-300">
                   Our services
                 </button>
+
               </div>
             </div>
           </div>

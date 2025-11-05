@@ -6,18 +6,18 @@ const Navigation = () => {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="bg-white border-b shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4">
+    <nav className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 py-2.5 md:py-3">
         <div className="flex items-center justify-between">
 
           {/* Left side: Logo + Navigation Links */}
-          <div className="flex items-center gap-10">
+          <div className="flex items-center gap-8">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-xl font-bold text-white">F</span>
+              <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-lg font-bold text-white">F</span>
               </div>
-              <span className="text-xl font-bold text-gray-800">Fixora</span>
+              <span className="text-lg font-bold text-gray-800">Fixora</span>
             </Link>
 
             {/* Navigation Links */}
@@ -50,18 +50,18 @@ const Navigation = () => {
           </div>
 
           {/* Right side: Auth buttons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {!user ? (
               <>
                 <Link
                   to="/login"
-                  className="border border-gray-300 px-5 py-2 rounded-lg text-gray-900 hover:bg-gray-50 font-medium"
+                  className="border border-gray-300 px-4 py-1.5 rounded-lg text-gray-900 hover:bg-gray-50 font-medium text-sm md:text-base"
                 >
                   Log in
                 </Link>
                 <Link
                   to="/signup"
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-1.5 rounded-lg text-sm md:text-base"
                 >
                   Sign up →
                 </Link>
@@ -73,7 +73,7 @@ const Navigation = () => {
                 </span>
                 <button
                   onClick={logout}
-                  className="border px-4 py-2 rounded-lg hover:bg-gray-50"
+                  className="border px-4 py-1.5 rounded-lg hover:bg-gray-50 text-sm"
                 >
                   Logout
                 </button>
@@ -87,3 +87,4 @@ const Navigation = () => {
 };
 
 export default Navigation;
+

@@ -3,10 +3,9 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="relative mt-20 mb-8"> {/* extra gap above & below */}
-      {/* CTA bar (shorter than footer, centered) */}
+    <footer className="relative mt-20 mb-8">
       <div className="relative z-20">
-        <div className="max-w-5xl mx-auto px-6"> {/* narrower than footer */}
+        <div className="max-w-5xl mx-auto px-6"> 
           <div className="bg-yellow-400 rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 px-6 md:px-10 py-5 md:py-6 -mb-10">
             <h3 className="text-xl md:text-2xl font-bold text-gray-900 text-center md:text-left">
               Get special pricing for your new project
@@ -16,7 +15,7 @@ const Footer = () => {
                     to="/quote"
                     className="inline-flex items-center justify-center rounded-2xl bg-gray-900 text-white font-semibold px-6 md:px-7 lg:px-8 py-3 md:py-3.5 hover:bg-gray-800 transition-colors"
                 >
-                    Request a quote →
+                    Book a Service →
                 </Link>
                 <Link
                     to="/about"

@@ -25,12 +25,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await client.post("/auth/login", { email, password });
-    setUser(data.user); // cookie already set by server
+    setUser(data.user); 
     return data.user;
   };
 
-  const signup = async (name, email, password) => {
-    const { data } = await client.post("/auth/signup", { name, email, password });
+  const signup = async (name, email, password, role) => {
+    const { data } = await client.post("/auth/signup", { name, email, password,role });
     setUser(data.user);
     return data.user;
   };

@@ -10,9 +10,7 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-6 py-2.5 md:py-3">
         <div className="flex items-center justify-between">
 
-          {/* Left side: Logo + Navigation Links */}
           <div className="flex items-center gap-8">
-            {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
               <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-lg font-bold text-white">F</span>
@@ -20,7 +18,6 @@ const Navigation = () => {
               <span className="text-lg font-bold text-gray-800">Fixora</span>
             </Link>
 
-            {/* Navigation Links */}
             <div className="hidden md:flex items-center gap-6">
               <Link
                 to="/"
@@ -49,7 +46,6 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Right side: Auth buttons */}
           <div className="flex items-center gap-3">
             {!user ? (
               <>

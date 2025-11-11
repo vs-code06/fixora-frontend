@@ -11,18 +11,47 @@ const Footer = () => {
               Get special pricing for your new project
             </h3>
             <div className="flex items-center gap-3">
-                <Link
-                    to="/quote"
-                    className="inline-flex items-center justify-center rounded-2xl bg-gray-900 text-white font-semibold px-6 md:px-7 lg:px-8 py-3 md:py-3.5 hover:bg-gray-800 transition-colors"
+              <Link
+                to="/quote"
+                className="
+                  inline-flex items-center justify-center gap-2
+                  rounded-2xl bg-gray-900 text-white font-semibold
+                  px-6 md:px-7 lg:px-8 py-3 md:py-3.5
+                  hover:bg-gray-800
+                  transition-all duration-300 ease-in-out
+                  transform hover:translate-y-1 group
+                "
+              >
+                Book a Service
+                <span
+                  aria-hidden
+                  className="transition-transform duration-300 group-hover:translate-x-1"
                 >
-                    Book a Service →
-                </Link>
-                <Link
-                    to="/about"
-                    className="inline-flex items-center justify-center rounded-2xl bg-transparent text-gray-900 font-semibold border-2 border-gray-900 px-6 md:px-7 lg:px-8 py-3 md:py-3.5 hover:bg-gray-900 hover:text-white transition-all duration-300"
+                  →
+                </span>
+              </Link>
+
+              {/* More About Us Button */}
+              <Link
+                to="/about"
+                className="
+                  inline-flex items-center justify-center gap-2
+                  rounded-2xl border-2 border-gray-900 text-gray-900 font-semibold
+                  bg-transparent
+                  px-6 md:px-7 lg:px-8 py-3 md:py-3.5
+                  hover:bg-gray-900 hover:text-white
+                  transition-all duration-300 ease-in-out
+                  transform hover:translate-y-1 group
+                "
+              >
+                More about us
+                <span
+                  aria-hidden
+                  className="transition-transform duration-300 group-hover:translate-x-1"
                 >
-                    More about us
-                </Link>
+                  →
+                </span>
+              </Link>
             </div>
           </div>
         </div>

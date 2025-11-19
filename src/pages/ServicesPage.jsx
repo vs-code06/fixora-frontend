@@ -1,78 +1,62 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ServiceCard from "../components/ServiceCard";
+import client from "../api/client";
 
 import {
-    LuWrench,
-    LuPaintRoller,
-    LuZap,
-    LuDroplet,   
-    LuHammer,    
-    LuDrill      
-  } from "react-icons/lu";
-  
+  LuWrench,
+  LuPaintRoller,
+  LuZap,
+  LuDroplet,
+  LuHammer,
+  LuDrill,
+} from "react-icons/lu";
 
-import svcImg1 from "../assets/service-1.jpg";
-import svcImg2 from "../assets/service-2.jpg";
-import svcImg3 from "../assets/service-3.jpg";
-import svcImg4 from "../assets/service-4.jpg";
-import svcImg5 from "../assets/service-5.jpg";
-import svcImg6 from "../assets/service-6.jpg";
+const ICON_MAP = {
+  LuWrench,
+  LuPaintRoller,
+  LuZap,
+  LuDroplet,
+  LuHammer,
+  LuDrill,
+};
 
-const services = [
-    {
-      id: "general-repairs",
-      title: "General Repairs",
-      desc:
-        "Quick fixes for doors, hinges, small installs and everyday household repairs.",
-      image: svcImg1,
-      Icon: LuWrench,
-    },
-    {
-      id: "painting",
-      title: "Painting and decorating",
-      desc:
-        "Interior & exterior painting: prep, primer, finish coats and touch-ups.",
-      image: svcImg2,
-      Icon: LuPaintRoller,
-    },
-    {
-      id: "electrical",
-      title: "Electrical repairs",
-      desc:
-        "Socket & switch replacement, appliance wiring, safety checks by certified pros.",
-      image: svcImg3,
-      Icon: LuZap,
-    },
-    {
-      id: "plumbing",
-      title: "Plumbing repairs",
-      desc:
-        "Leak detection, pipe repairs, mixer & geyser installation and drain unblocking.",
-      image: svcImg4,
-      Icon: LuDroplet,
-    },
-    {
-      id: "carpentry",
-      title: "Carpentry services",
-      desc:
-        "Door, shelf and cabinet installations, custom carpentry and small woodwork projects.",
-      image: svcImg5,
-      Icon: LuHammer,
-    },
-    {
-      id: "furniture",
-      title: "Furniture assembly",
-      desc:
-        "Fast, careful furniture assembly from flat-pack deliveries or onsite builds.",
-      image: svcImg6,
-      Icon: LuDrill,
-    },
-  ];
-  
-  
 
 const ServicesPage = () => {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+  
+    const fetchServices = async () => {
+      try {
+        const { data } = await client.get("/services");
+        console.log("services:", data);
+  
+        if (mounted) {
+          const formatted = data.map((s) => ({
+            ...s,
+            Icon: ICON_MAP[s.icon] || null, 
+          }));
+  
+          setServices(formatted);
+        }
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+  
+    fetchServices();
+  
+    return () => {
+      mounted = false;
+    };
+  }, []); // runs once
+   // runs once when component loads
+
   return (
     <main className="pt-12 pb-20">
       {/* Top hero band */}
@@ -93,74 +77,60 @@ const ServicesPage = () => {
 
           <div className="mt-8">
             <Link
-                to="/quote"
-                className="
-                    inline-flex items-center gap-2 
-                    rounded-lg bg-yellow-400 text-gray-900 font-semibold 
-                    px-6 py-3 shadow-sm 
-                    transition-all duration-300 ease-in-out 
-                    hover:translate-y-1 
-                    group
-                "
-                aria-label="Get a quote"
-                >
-                Book a Service 
-                <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+              to="/quote"
+              className="inline-flex items-center gap-2 rounded-lg bg-yellow-400 text-gray-900 font-semibold px-6 py-3 shadow-sm transition-all duration-300 hover:translate-y-1 group"
+            >
+              Book a Service
+              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
             </Link>
           </div>
 
-          {/* decorative curve (optional) */}
           <svg
             className="absolute right-0 bottom-0 opacity-60 w-64 h-64 md:w-96 md:h-96 pointer-events-none"
             viewBox="0 0 200 200"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              fill="none"
-              stroke="#56B7FF"
-              strokeWidth="6"
-              d="M0 150 C 50 200, 150 100, 200 150"
-            />
+            <path fill="none" stroke="#56B7FF" strokeWidth="6" d="M0 150 C 50 200, 150 100, 200 150" />
           </svg>
         </div>
       </section>
 
-      {/* Services list */}
+      {/* Service Cards */}
       <section className="max-w-7xl mx-auto px-6 mt-16 space-y-12">
-        {services.map((s, idx) => (
-          <ServiceCard
-            key={s.id}
-            title={s.title}
-            desc={s.desc}
-            image={s.image}
-            reverse={idx % 2 === 1} // alternate sides
-            to={`/services/${s.id}`}
-            Icon={s.Icon}
-          />
-        ))}
 
-        {/* Bottom CTA centered */}
+        {/* Loading */}
+        {loading && (
+          <div className="text-center text-gray-500 text-lg py-10">
+            Loading services…
+          </div>
+        )}
+
+        {/* Render services */}
+        {!loading &&
+          services.map((s, idx) => (
+            <ServiceCard
+              key={s.slug}
+              title={s.title}
+              desc={s.desc}
+              image={s.image}
+              reverse={idx % 2 === 1}
+              to={`/services/${s.slug}`}
+              Icon={s.Icon}  
+            />
+          ))}
+
         <div className="flex justify-center mt-6">
-            <Link
-                to="/contact"
-                className="
-                    inline-flex items-center gap-2 
-                    rounded-lg bg-yellow-400 text-gray-900 font-semibold 
-                    px-8 py-3 shadow-sm 
-                    transition-all duration-300 ease-in-out 
-                    hover:translate-y-1 
-                    group
-                "
-                >
-                Contact service
-                <span 
-                    aria-hidden 
-                    className="transition-transform duration-300 group-hover:translate-x-1"
-                >
-                    →
-                </span>
-            </Link>
-
+          <Link
+            to="/contact"
+            className="inline-flex items-center gap-2 rounded-lg bg-yellow-400 text-gray-900 font-semibold px-8 py-3 shadow-sm transition-all duration-300 hover:translate-y-1 group"
+          >
+            Contact service
+            <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </Link>
         </div>
       </section>
     </main>

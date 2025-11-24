@@ -9,7 +9,7 @@ const Hero = () => {
   return (
     <section className="relative w-full bg-white overflow-hidden pt-2 md:pt-4 pb-14 md:pb-20">
       <div className="max-w-7xl mx-auto px-6 relative">
-        <div className="relative rounded-[28px] shadow-lg overflow-hidden">
+        <div className="relative rounded-[28px] overflow-hidden">
           <img
             src={HeroImg}
             alt="Plumber working"

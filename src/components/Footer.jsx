@@ -15,7 +15,7 @@ const Footer = () => {
                 to="/quote"
                 className="
                   inline-flex items-center justify-center gap-2
-                  rounded-2xl bg-gray-900 text-white font-semibold
+                  rounded-lg bg-gray-900 text-white font-semibold
                   px-6 md:px-7 lg:px-8 py-3 md:py-3.5
                   hover:bg-gray-800
                   transition-all duration-300 ease-in-out
@@ -36,7 +36,7 @@ const Footer = () => {
                 to="/about"
                 className="
                   inline-flex items-center justify-center gap-2
-                  rounded-2xl border-2 border-gray-900 text-gray-900 font-semibold
+                  rounded-lg border-2 border-gray-900 text-gray-900 font-semibold
                   bg-transparent
                   px-6 md:px-7 lg:px-8 py-3 md:py-3.5
                   hover:bg-gray-900 hover:text-white

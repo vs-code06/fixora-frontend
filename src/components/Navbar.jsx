@@ -45,9 +45,9 @@ export default function Navigation() {
 
             {/* Desktop links */}
             <div className="hidden md:flex items-center gap-6">
-              <NavLink to="/" className={linkClasses}>
+              {/* <NavLink to="/" className={linkClasses}>
                 Home
-              </NavLink>
+              </NavLink> */}
 
               <NavLink to="/about" className={linkClasses}>
                 About

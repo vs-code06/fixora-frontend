@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import ServicesPage from "./pages/ServicesPage";
 import About from "./pages/About";
 import ScrollToTop from "./components/ScrollToTop"; 
+import Contact from "./pages/Contact";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </main>
         <Footer />

@@ -79,7 +79,7 @@ export default function About() {
       </section>
 
       {/* QUICK STATS */}
-      <section className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      {/* <section className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
         {[
           ["2.5K", "Connected Customers"],
           ["4.2K", "Jobs Completed"],
@@ -91,7 +91,7 @@ export default function About() {
             <p className="text-sm text-slate-600 mt-1">{label}</p>
           </div>
         ))}
-      </section>
+      </section> */}
 
       {/* ---------------- STORY SECTION ---------------- */}
       <section

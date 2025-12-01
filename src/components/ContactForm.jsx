@@ -1,4 +1,3 @@
-// src/components/ContactForm.jsx
 import React, { useEffect, useRef, useState } from "react";
 import client from "../api/client";
 
@@ -51,10 +50,8 @@ export default function ContactForm() {
         text: "Thanks — we got your message. We'll reach out soon.",
       });
 
-      // show modal (themed overlay)
       setShowSuccessModal(true);
 
-      // reset form
       setForm({
         firstName: "",
         lastName: "",
@@ -71,17 +68,14 @@ export default function ContactForm() {
     }
   };
 
-  // close modal handler
   const closeModal = () => {
     setShowSuccessModal(false);
-    // return focus to the form submit button (or first input)
     if (formRef.current) {
       const btn = formRef.current.querySelector('button[type="submit"]');
       if (btn) btn.focus();
     }
   };
 
-  // close modal with Esc key
   useEffect(() => {
     if (!showSuccessModal) return;
     const onKey = (e) => {
@@ -90,8 +84,7 @@ export default function ContactForm() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [showSuccessModal]);
-
-  // focus the close button when modal opens
+  
   useEffect(() => {
     if (showSuccessModal && closeBtnRef.current) {
       closeBtnRef.current.focus();

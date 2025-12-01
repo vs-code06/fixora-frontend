@@ -4,7 +4,6 @@ import HeroImg from "../assets/hero-worker.jpg";
 import AboutHeroImg from "../assets/About-hero-worker.jpg";
 import TestimonialsSection from "../components/TestimonialsSection";
 
-/* ------------------------- Hero Section ------------------------- */
 const Hero = () => {
   return (
     <section className="relative w-full bg-white overflow-hidden pt-2 md:pt-4 pb-14 md:pb-20">
@@ -33,7 +32,7 @@ const Hero = () => {
 
               <div className="mt-7 flex flex-col sm:flex-row gap-4">
                 <Link
-                  to="/quote"
+                  to="/hire"
                   className="
                     inline-flex items-center gap-2 
                     bg-yellow-400 text-black font-semibold 
@@ -199,7 +198,7 @@ const RangeOfServices = () => {
 
         <div className="mt-8 lg:mt-6 flex justify-center">
         <Link
-          to="/quote"
+          to="/hire"
           className="
             inline-flex items-center gap-2 
             bg-yellow-400 text-gray-900 font-semibold 

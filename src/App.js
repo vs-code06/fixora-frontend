@@ -9,6 +9,11 @@ import ServicesPage from "./pages/ServicesPage";
 import About from "./pages/About";
 import ScrollToTop from "./components/ScrollToTop"; 
 import Contact from "./pages/Contact";
+import Hire from "./pages/Hire";
+import ProfilePage from "./pages/Profile";
+import ProviderProfilePage from "./components/ProviderProfilePage";
+import BookingsPage from "./pages/Bookings";
+import ProviderDashboard from "./pages/ProviderDashboard";
 
 export default function App() {
   return (
@@ -24,6 +29,11 @@ export default function App() {
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/hire" element={<Hire />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/:id" element={<ProviderProfilePage />} />
+            <Route path="/bookings" element={<BookingsPage />} />
+            <Route path="/dashboard" element={<ProviderDashboard />} />
           </Routes>
         </main>
         <Footer />

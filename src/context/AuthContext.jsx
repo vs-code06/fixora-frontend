@@ -7,7 +7,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [bootstrapping, setBootstrapping] = useState(true);
 
-  // Check existing session on app load
   useEffect(() => {
     let mounted = true;
     (async () => {

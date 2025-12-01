@@ -1,12 +1,9 @@
-// src/pages/About.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-
-// Images
-import HeroImg from "../assets/about-hero-main.jpg";     // hero left image
-import StoryImg from "../assets/our-story.jpg";          // our story image
-import MissionImg from "../assets/our-mission.jpg";      // mission image
-import TeamImg from "../assets/hero-worker.jpg";         // founder avatar
+import HeroImg from "../assets/about-hero-main.jpg";     
+import StoryImg from "../assets/our-story.jpg";          
+import MissionImg from "../assets/our-mission.jpg";      
+import TeamImg from "../assets/hero-worker.jpg";        
 
 import AboutValues from "../components/AboutValues";
 
@@ -46,7 +43,7 @@ export default function About() {
 
             <div className="flex gap-4 mt-8">
               <Link
-                to="/quote"
+                to="/hire"
                 className="
                   inline-flex items-center gap-2 
                   bg-yellow-400 text-black font-semibold 
@@ -122,7 +119,7 @@ export default function About() {
 
           <div className="mt-8">
             <Link
-              to="/quote"
+              to="/hire"
               className="
                 inline-flex items-center gap-2 
                 bg-yellow-400 text-black font-semibold 

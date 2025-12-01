@@ -12,7 +12,7 @@ const Footer = () => {
             </h3>
             <div className="flex items-center gap-3">
               <Link
-                to="/quote"
+                to="/hire"
                 className="
                   inline-flex items-center justify-center gap-2
                   rounded-lg bg-gray-900 text-white font-semibold

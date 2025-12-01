@@ -1,4 +1,3 @@
-// src/components/FAQ.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import client from "../api/client";

@@ -54,8 +54,7 @@ const ServicesPage = () => {
     return () => {
       mounted = false;
     };
-  }, []); // runs once
-   // runs once when component loads
+  }, []); 
 
   return (
     <main className="pt-12 pb-20">
@@ -77,7 +76,7 @@ const ServicesPage = () => {
 
           <div className="mt-8">
             <Link
-              to="/quote"
+              to="/hire"
               className="inline-flex items-center gap-2 rounded-lg bg-yellow-400 text-gray-900 font-semibold px-6 py-3 shadow-sm transition-all duration-300 hover:translate-y-1 group"
             >
               Book a Service

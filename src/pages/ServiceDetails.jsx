@@ -9,7 +9,7 @@ import { default as Service4 } from "../assets/service-4.jpg";
 import { default as Service5 } from "../assets/service-5.jpg";
 import { default as Service6 } from "../assets/service-6.jpg";
 import { default as BottomImg } from "../assets/servicebottom.jpg";
-import { LuChevronLeft, LuZap } from "react-icons/lu";
+import { LuZap } from "react-icons/lu";
 
 const brand = {
   accent: "#1A386A",

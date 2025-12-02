@@ -151,7 +151,7 @@ function PriceModal({ open, booking, onCancel, onSubmit, loading }) {
 }
 
 export default function ProviderDashboard() {
-  const { user, token } = useAuth() || {};
+  const { user } = useAuth() || {};
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);

@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import client from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import { connectSocket } from "../lib/socket";
 import { motion, AnimatePresence } from "framer-motion";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 
@@ -61,7 +60,7 @@ function lastNMonths(n = 6) {
   return arr;
 }
 
-/* Confirmation modal component */
+/* Confirmation modal component (kept same API you already use) */
 function ConfirmModal({ open, title, description, onCancel, onConfirm, loading }) {
   useEffect(() => {
     function onKey(e) {
@@ -165,6 +164,14 @@ export default function ProviderDashboard() {
   const [priceModalOpen, setPriceModalOpen] = useState(false);
   const [priceBooking, setPriceBooking] = useState(null);
 
+  // small toast state for provider remove
+  const [toast, setToast] = useState(null);
+
+  // REMOVE modal state (new)
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState(null); // booking object
+  const [removeLoading, setRemoveLoading] = useState(false);
+
   const fetchBookings = useCallback(async () => {
     if (!user || user.role !== "provider") {
       setBookings([]);
@@ -187,39 +194,6 @@ export default function ProviderDashboard() {
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
-
-  // socket live updates
-  useEffect(() => {
-    if (!user || user.role !== "provider") return;
-    const s = connectSocket(token);
-    if (!s) return;
-
-    function upsertBooking(payloadBooking) {
-      setBookings(prev => {
-        const exists = prev.some(b => String(b._id) === String(payloadBooking._id));
-        if (exists) return prev.map(b => (String(b._id) === String(payloadBooking._id) ? payloadBooking : b));
-        return [payloadBooking, ...prev];
-      });
-    }
-
-    function onNotification(payload) {
-      if (payload?.booking) upsertBooking(payload.booking);
-      else fetchBookings();
-    }
-
-    function onBookingCreated(payload) {
-      if (payload?.booking) upsertBooking(payload.booking);
-      else fetchBookings();
-    }
-
-    s.on("notification", onNotification);
-    s.on("booking:created", onBookingCreated);
-
-    return () => {
-      s.off("notification", onNotification);
-      s.off("booking:created", onBookingCreated);
-    };
-  }, [user, token, fetchBookings]);
 
   // update status (now accepts optional price)
   async function doUpdateStatus(bookingId, nextStatus, price) {
@@ -266,6 +240,30 @@ export default function ProviderDashboard() {
     doUpdateStatus(priceBooking._id, "completed", priceValue);
   }
 
+  // NEW: open UI modal to confirm removal (does not delete customer's record)
+  function openRemoveModal(booking) {
+    setRemoveTarget(booking);
+    setRemoveConfirmOpen(true);
+  }
+
+  // NEW: perform remove
+  async function confirmRemove() {
+    if (!removeTarget) return;
+    setRemoveLoading(true);
+    try {
+      await client.delete(`/bookings/provider/${removeTarget._id}`);
+      setBookings(prev => prev.filter(b => String(b._id) !== String(removeTarget._id)));
+      setToast({ title: "Hidden", message: "This booking is hidden from your provider dashboard.", type: "success" });
+      setRemoveConfirmOpen(false);
+      setRemoveTarget(null);
+    } catch (err) {
+      console.error("removeFromProviderList:", err);
+      alert(err?.response?.data?.error || "Failed to remove booking from provider list");
+    } finally {
+      setRemoveLoading(false);
+    }
+  }
+
   // partition: Active vs Archive
   const active = bookings
     .filter((b) => ["pending", "accepted", "in_progress"].includes(b.status || "pending"))
@@ -282,7 +280,7 @@ export default function ProviderDashboard() {
 
     bookings.forEach(b => {
       const key = monthKey(b.scheduledAt || b.createdAt || new Date());
-      const price = typeof b.price === "number" ? b.price : 0; // now only use price (provider sets on complete)
+      const price = typeof b.price === "number" ? b.price : 0;
       if (map[key] !== undefined) map[key] += Number(price || 0);
     });
 
@@ -295,6 +293,12 @@ export default function ProviderDashboard() {
   // totals
   const totalBookings = bookings.length;
   const totalCompleted = bookings.filter(b => b.status === "completed").length;
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   if (!user) {
     return <div className="p-6">Please log in to view your dashboard.</div>;
@@ -423,6 +427,15 @@ export default function ProviderDashboard() {
                       {b.status === "completed" && typeof b.price === "number" && (
                         <div className="text-sm text-slate-600">₹{Number(b.price).toLocaleString()}</div>
                       )}
+
+                      {/* NEW: Remove (opens modal) */}
+                      <button
+                        onClick={() => openRemoveModal(b)}
+                        className="px-3 py-1 rounded-lg border text-sm"
+                        style={{ borderColor: "#E5E7EB", color: "#1A386A" }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -432,7 +445,6 @@ export default function ProviderDashboard() {
         )}
       </section>
 
-      {/* Earnings chart (bottom) */}
       <section className="mb-12">
         <div className="flex items-center mb-4">
           <div className="w-1 h-6 bg-[#57A7F4] rounded-full mr-3" />
@@ -440,8 +452,8 @@ export default function ProviderDashboard() {
         </div>
 
         <div className="rounded-xl p-4 bg-white border border-[#ECF1F3] shadow-sm">
-          <div style={{ width: "100%", height: 220 }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div style={{ width: "100%", height: 220, minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height={220}>
               <BarChart data={earningsByMonth.chartData}>
                 <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={(v) => `₹${v}`} />
@@ -453,7 +465,7 @@ export default function ProviderDashboard() {
         </div>
       </section>
 
-      {/* Confirm Modal */}
+      {/* Confirm Modal for status */}
       <ConfirmModal
         open={confirmOpen}
         title={confirmPayload.label || "Confirm"}
@@ -471,6 +483,31 @@ export default function ProviderDashboard() {
         loading={updatingId === priceBooking?._id}
         onSubmit={handlePriceSubmit}
       />
+
+      {/* NEW: Confirm Modal for hide/remove */}
+      <ConfirmModal
+        open={removeConfirmOpen}
+        title="Hide booking"
+        description="Are you sure you want to delete this booking you cannot undo this action"
+        loading={removeLoading}
+        onCancel={() => { setRemoveConfirmOpen(false); setRemoveTarget(null); }}
+        onConfirm={confirmRemove}
+      />
+
+      {/* small toast */}
+      {toast && (
+        <div className="fixed right-6 bottom-6 z-50">
+          <div className="max-w-sm rounded-xl shadow-2xl px-4 py-3 bg-[#1A386A] text-white">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="font-semibold">{toast.title}</div>
+                <div className="text-sm mt-1 opacity-90">{toast.message}</div>
+              </div>
+              <button onClick={() => setToast(null)} className="ml-2 text-sm opacity-90">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

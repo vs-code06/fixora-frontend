@@ -14,6 +14,8 @@ import ProfilePage from "./pages/Profile";
 import ProviderProfilePage from "./components/ProviderProfilePage";
 import BookingsPage from "./pages/Bookings";
 import ProviderDashboard from "./pages/ProviderDashboard";
+import ServiceDetails from "./pages/ServiceDetails";
+import ComingSoon from "./pages/ComingSoon";
 
 export default function App() {
   return (
@@ -34,6 +36,8 @@ export default function App() {
             <Route path="/profile/:id" element={<ProviderProfilePage />} />
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/dashboard" element={<ProviderDashboard />} />
+            <Route path="/services/:slug" element={<ServiceDetails />} />
+            <Route path="*" element={<ComingSoon />} />
           </Routes>
         </main>
         <Footer />

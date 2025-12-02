@@ -1,15 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import client from "../api/client";
 import dayjs from "dayjs";
 
-
 const brand = {
-  primary: "#FFCE51", 
+  primary: "#FFCE51",
   primaryDark: "#F2C43A",
   accent: "#1A386A",
-  secondary1: "#2563EB", 
+  secondary1: "#2563EB",
   secondary2: "#E9F4FF",
-  neutral800: "#3D4249", 
+  neutral800: "#3D4249",
   neutral700: "#586272",
   neutral600: "#9399A2",
   neutral400: "#D9DCE2",
@@ -36,6 +35,54 @@ function Toast({ toast, onClose }) {
           </div>
           <button onClick={onClose} className="ml-2 text-sm opacity-90">
             Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Remove confirmation modal (replaces window.confirm) */
+function RemoveConfirmModal({ open, booking, onCancel, onConfirm, loading }) {
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape") onCancel();
+    }
+    if (open) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onCancel]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center px-4">
+      <div className="absolute inset-0" style={{ background: "rgba(10,20,40,0.36)" }} onClick={onCancel} />
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 z-50">
+        {/* Title color changed to black */}
+        <h3 className="text-lg font-semibold" style={{ color: "#000" }}>
+          Remove booking from list
+        </h3>
+        <p className="mt-2 text-sm" style={{ color: brand.neutral700 }}>
+          This will remove the booking from your bookings list. Are you sure you want delete it!
+        </p>
+
+        {booking && (
+          <div className="mt-4 p-3 rounded-md" style={{ background: brand.neutral200 }}>
+            <div className="text-sm font-medium" style={{ color: brand.accent }}>{booking.serviceTitle}</div>
+            <div className="text-xs text-slate-500 mt-1">{booking.provider?.name ?? "—"} · {dayjs(booking.scheduledAt).format("DD MMM YYYY, HH:mm")}</div>
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button onClick={onCancel} className="px-3 py-2 rounded-lg border" style={{ borderColor: brand.neutral300 }}>
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="px-3 py-2 rounded-lg text-black font-semibold disabled:opacity-60"
+            style={{ background: brand.primary }}
+          >
+            {loading ? "Removing…" : "Remove from my list"}
           </button>
         </div>
       </div>
@@ -219,6 +266,7 @@ export default function BookingsPage() {
   const [confirm, setConfirm] = useState({ open: false, booking: null, loading: false });
   const [details, setDetails] = useState({ open: false, booking: null });
   const [toast, setToast] = useState(null);
+  const [meta, setMeta] = useState({ total: 0, totalPages: 1, counts: null });
 
   const [activeTab, setActiveTab] = useState("all");
   const [query, setQuery] = useState("");
@@ -227,20 +275,90 @@ export default function BookingsPage() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(9);
 
-  useEffect(() => {
-    (async () => {
+  // remove-modal state
+  const [removeOpen, setRemoveOpen] = useState(false);
+  const [removeBooking, setRemoveBooking] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
+
+  // reusable fetch function (supports optional page override)
+  const fetchBookings = useCallback(
+    async ({ pageOverride } = {}) => {
+      const controller = new AbortController();
+      const usedPage = pageOverride ?? page;
       setLoading(true);
+
       try {
-        const res = await client.get("/bookings/me");
+        const res = await client.get("/bookings/me", {
+          params: {
+            page: usedPage,
+            perPage,
+            status: activeTab,
+            q: query || undefined,
+          },
+          signal: controller.signal,
+        });
+
+        // backend expected to return { data: [...], meta: { total, totalPages, counts? } }
         setBookings(res.data.data || []);
+        setMeta(res.data.meta || { total: 0, totalPages: 1, counts: null });
       } catch (err) {
-        console.error("fetch bookings:", err);
-        setToast({ title: "Error", message: err?.response?.data?.error || "Could not load bookings", type: "error" });
+        // ignore aborts
+        const isAbort = err?.name === "CanceledError" || err?.name === "AbortError";
+        if (!isAbort) {
+          console.error("fetch bookings:", err);
+          setToast({
+            title: "Error",
+            message: err?.response?.data?.error || "Could not load bookings",
+            type: "error",
+          });
+        }
       } finally {
         setLoading(false);
       }
+
+      return () => controller.abort();
+    },
+    [page, perPage, activeTab, query]
+  );
+
+  // initial + reactive fetch when page/perPage/filters change
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await client.get("/bookings/me", {
+          params: {
+            page,
+            perPage,
+            status: activeTab,
+            q: query || undefined,
+          },
+          signal: controller.signal,
+        });
+        if (cancelled) return;
+        setBookings(res.data.data || []);
+        setMeta(res.data.meta || { total: 0, totalPages: 1, counts: null });
+      } catch (err) {
+        if (err?.name === "CanceledError" || err?.name === "AbortError") return;
+        console.error("fetch bookings:", err);
+        setToast({
+          title: "Error",
+          message: err?.response?.data?.error || "Could not load bookings",
+          type: "error",
+        });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
-  }, []);
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [page, perPage, activeTab, query]);
 
   useEffect(() => {
     if (!toast) return;
@@ -251,8 +369,10 @@ export default function BookingsPage() {
   // reset to page 1 when filters change
   useEffect(() => setPage(1), [activeTab, query, perPage]);
 
-  // counts by status and upcoming logic
+  // counts (prefer meta.counts from server; fallback calculates from page)
   const counts = useMemo(() => {
+    if (meta?.counts) return meta.counts;
+    // fallback: counts from current page (best-effort)
     const c = {
       all: 0,
       upcoming: 0,
@@ -261,7 +381,6 @@ export default function BookingsPage() {
       cancelled: 0,
       rejected: 0,
     };
-
     bookings.forEach(b => {
       c.all += 1;
       const s = b.status;
@@ -269,13 +388,11 @@ export default function BookingsPage() {
       else if (s === "completed") c.completed += 1;
       else if (s === "cancelled") c.cancelled += 1;
       else if (s === "rejected") c.rejected += 1;
-
       const scheduledFuture = dayjs(b.scheduledAt).isAfter(dayjs());
       if (scheduledFuture && ["pending", "accepted"].includes(s)) c.upcoming += 1;
     });
-
     return c;
-  }, [bookings]);
+  }, [meta, bookings]);
 
   function openCancelModal(booking) {
     setConfirm({ open: true, booking, loading: false });
@@ -292,9 +409,9 @@ export default function BookingsPage() {
     setConfirm(prev => ({ ...prev, loading: true }));
 
     try {
-      const res = await client.patch(`/bookings/${booking._id}/status`, { status: "cancelled" });
-      const updated = res.data.data;
-      setBookings(prev => prev.map(b => (String(b._id) === String(updated._id) ? updated : b)));
+      // const res = await client.patch(`/bookings/${booking._id}/status`, { status: "cancelled" });
+      // instead of patching local list, re-fetch current page to keep meta consistent
+      await fetchBookings();
       setToast({ title: "Cancelled", message: "Your booking has been cancelled", type: "success" });
     } catch (err) {
       console.error("cancel booking:", err);
@@ -305,44 +422,49 @@ export default function BookingsPage() {
     }
   }
 
+  // open remove modal (instead of window.confirm)
+  function openRemoveModal(booking) {
+    setRemoveBooking(booking);
+    setRemoveOpen(true);
+  }
+
+  // confirm removal (calls backend, updates UI)
+  async function confirmRemove() {
+    if (!removeBooking) {
+      setRemoveOpen(false);
+      return;
+    }
+    setRemovingId(removeBooking._id);
+    try {
+      await client.delete(`/bookings/me/${removeBooking._id}`);
+
+      // compute next page if we removed the last item on the last page
+      const newTotal = Math.max(0, (meta.total || 0) - 1);
+      let nextPage = page;
+      if ((nextPage - 1) * perPage >= newTotal && nextPage > 1) {
+        nextPage = nextPage - 1;
+        setPage(nextPage);
+      }
+
+      // re-fetch using nextPage (so meta is correct)
+      await fetchBookings({ pageOverride: nextPage });
+
+      setToast({ title: "Removed", message: "Removed from your bookings", type: "success" });
+    } catch (err) {
+      console.error("removeFromMyList:", err);
+      setToast({ title: "Error", message: err?.response?.data?.error || "Failed to remove", type: "error" });
+    } finally {
+      setRemovingId(null);
+      setRemoveOpen(false);
+      setRemoveBooking(null);
+    }
+  }
+
   function openDetails(b) {
     setDetails({ open: true, booking: b });
   }
 
-  // filter bookings by active tab and search query
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    let list = bookings.slice();
-
-    if (activeTab === "upcoming") {
-      list = list.filter(b => dayjs(b.scheduledAt).isAfter(dayjs()) && ["pending", "accepted"].includes(b.status));
-    } else if (activeTab !== "all") {
-      list = list.filter(b => b.status === activeTab);
-    }
-
-    if (q) {
-      list = list.filter(b =>
-        (b.serviceTitle || "").toLowerCase().includes(q) ||
-        (b.provider?.name || "").toLowerCase().includes(q) ||
-        (b.customerName || "").toLowerCase().includes(q)
-      );
-    }
-
-    if (activeTab === "upcoming") {
-      list.sort((a, z) => dayjs(a.scheduledAt).isAfter(dayjs(z.scheduledAt)) ? 1 : -1);
-    } else {
-      list.sort((a, z) => dayjs(z.createdAt).valueOf() - dayjs(a.createdAt).valueOf());
-    }
-
-    return list;
-  }, [bookings, activeTab, query]);
-
-  // pagination calculations
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-  const paginated = useMemo(() => {
-    const start = (page - 1) * perPage;
-    return filtered.slice(start, start + perPage);
-  }, [filtered, page, perPage]);
+  const totalPages = Math.max(1, meta.totalPages || 1);
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -384,7 +506,6 @@ export default function BookingsPage() {
             </div>
           </div>
         </div>
-
       </header>
 
       {/* Tabs / Filters */}
@@ -405,11 +526,12 @@ export default function BookingsPage() {
                 aria-pressed={activeTab === tab.key}
               >
                 <span style={{ fontSize: 13 }}>{tab.label}</span>
-                <span style={{ fontSize: 11, opacity: 0.95, background: brand.neutral200, padding: "2px 8px", borderRadius: 999, color: brand.accent }}>{counts[tab.key] ?? 0}</span>
+                <span style={{ fontSize: 11, opacity: 0.95, background: brand.neutral200, padding: "2px 8px", borderRadius: 999, color: brand.accent }}>
+                  {counts[tab.key] ?? 0}
+                </span>
               </button>
             ))}
           </div>
-
         </div>
       </div>
 
@@ -419,7 +541,7 @@ export default function BookingsPage() {
           <div className="h-8 w-8 rounded-full animate-pulse" style={{ background: brand.neutral300 }} />
           <div style={{ color: brand.neutral700 }}>Loading your bookings…</div>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : bookings.length === 0 ? (
         <div className="rounded-xl" style={{ border: `1px dashed ${brand.neutral300}`, padding: 28, textAlign: "center", background: brand.white }}>
           <h3 className="text-lg font-medium mb-2" style={{ color: brand.accent }}>
             {activeTab === "all" ? "No bookings yet" : `No ${TABS.find(t => t.key === activeTab)?.label || "bookings"}`}
@@ -432,7 +554,7 @@ export default function BookingsPage() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {paginated.map(b => (
+          {bookings.map(b => (
             <article
               key={b._id}
               className="relative bg-white rounded-xl shadow-md border p-3 md:p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-start gap-3"
@@ -520,6 +642,17 @@ export default function BookingsPage() {
                     ₹{b.price != null ? Number(b.price).toLocaleString() : (b.durationHours * 500).toLocaleString()}
                   </div>
                   <div className="text-xs" style={{ color: brand.neutral400 }}>{b.durationHours} hr</div>
+
+                  {/* Show Remove button for archived bookings */}
+                  {["completed", "rejected", "cancelled"].includes(b.status) && (
+                    <button
+                      onClick={() => openRemoveModal(b)}
+                      className="mt-2 px-3 py-1 rounded-lg border text-sm"
+                      style={{ borderColor: brand.neutral300, color: brand.accent }}
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               </div>
             </article>
@@ -528,7 +661,7 @@ export default function BookingsPage() {
           {/* pagination controls */}
           <div className="mt-2 flex items-center justify-between">
             <div className="text-sm" style={{ color: brand.neutral700 }}>
-              Showing <span style={{ color: brand.accent, fontWeight: 600 }}>{(page - 1) * perPage + 1}</span> - <span style={{ color: brand.accent, fontWeight: 600 }}>{Math.min(page * perPage, filtered.length)}</span> of <span style={{ color: brand.accent, fontWeight: 600 }}>{filtered.length}</span>
+              Showing <span style={{ color: brand.accent, fontWeight: 600 }}>{bookings.length === 0 ? 0 : (page - 1) * perPage + 1}</span> - <span style={{ color: brand.accent, fontWeight: 600 }}>{(page - 1) * perPage + bookings.length}</span> of <span style={{ color: brand.accent, fontWeight: 600 }}>{meta.total || 0}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -584,6 +717,14 @@ export default function BookingsPage() {
         open={details.open}
         booking={details.booking}
         onClose={() => setDetails({ open: false, booking: null })}
+      />
+
+      <RemoveConfirmModal
+        open={removeOpen}
+        booking={removeBooking}
+        onCancel={() => { setRemoveOpen(false); setRemoveBooking(null); }}
+        onConfirm={confirmRemove}
+        loading={Boolean(removingId)}
       />
 
       <Toast toast={toast} onClose={() => setToast(null)} />

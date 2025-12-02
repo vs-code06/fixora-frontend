@@ -57,6 +57,47 @@ function DummyProfileModal({ provider, open, onClose, onHire }) {
   );
 }
 
+/* Small success modal shown after booking creation */
+function SuccessModal({ open, booking, onClose, onViewBookings }) {
+  useEffect(() => {
+    // escape to close
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    if (open) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-2 p-6 z-10">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold">Booking created</h3>
+            <p className="text-sm text-slate-600 mt-1">Your booking was created successfully.</p>
+          </div>
+          <div className="text-sm text-slate-500">{booking ? new Date(booking.scheduledAt).toLocaleString() : ""}</div>
+        </div>
+
+        {booking && (
+          <div className="mt-4 border rounded-md p-3 bg-slate-50">
+            <div className="text-sm text-slate-700 font-medium">{booking.serviceTitle}</div>
+            <div className="text-xs text-slate-500 mt-1">With: {booking.provider?.name ?? "—"}</div>
+            <div className="text-xs text-slate-500 mt-1">{booking.address}</div>
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button onClick={onClose} className="px-3 py-2 rounded-md border text-sm">Close</button>
+          <button onClick={onViewBookings} className="px-3 py-2 rounded-md bg-yellow-400 text-sm font-semibold">View my bookings</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Hire() {
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
@@ -73,6 +114,10 @@ export default function Hire() {
 
   const [bookingProvider, setBookingProvider] = useState(null);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
+
+  // success modal state
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successBooking, setSuccessBooking] = useState(null);
 
   const categories = ["Plumbing", "Cleaning", "Electrical", "AC Repair", "Painting", "Carpentry"];
 
@@ -113,22 +158,20 @@ export default function Hire() {
   }
   const pageWindow = getPageWindow(meta.totalPages || 1);
 
-  // function handleViewProfile(p) {
-  //   setSelectedProvider(p);
-  //   setIsProfileModalOpen(true);
-  // }
-
   function handleHire(p) {
     setBookingProvider(p);
     setBookingModalOpen(true);
   }
 
+  // replaced alert with success modal
   function handleBooked(booking) {
-    try {
-      alert("Booking created successfully.");
-    } catch (err) {
-      console.log("Booked", booking);
-    }
+    // booking is the response object returned from BookingModal -> API
+    setSuccessBooking(booking);
+    setSuccessOpen(true);
+
+    // auto-close after 3.5s but keep modal dismissible immediately
+    const t = setTimeout(() => setSuccessOpen(false), 3500);
+    return () => clearTimeout(t);
   }
 
   return (
@@ -243,6 +286,18 @@ export default function Hire() {
         open={bookingModalOpen}
         onClose={() => { setBookingModalOpen(false); setBookingProvider(null); }}
         onBooked={handleBooked}
+      />
+
+      <SuccessModal
+        open={successOpen}
+        booking={successBooking}
+        onClose={() => setSuccessOpen(false)}
+        onViewBookings={() => {
+          setSuccessOpen(false);
+          // navigate to bookings page; if you use react-router use navigate('/bookings')
+          // fallback: open bookings route in same tab:
+          window.location.href = "/bookings";
+        }}
       />
     </div>
   );

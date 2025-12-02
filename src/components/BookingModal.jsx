@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import client from "../api/client"; 
+import client from "../api/client";
 import dayjs from "dayjs";
 
 export default function BookingModal({ provider, open, onClose, onBooked }) {
@@ -23,7 +23,7 @@ export default function BookingModal({ provider, open, onClose, onBooked }) {
     setLoading(true);
     try {
       const payload = {
-        providerId: provider._id,
+        providerId: provider._id || provider.id || provider.providerId,
         serviceTitle: provider.categories?.[0] ? `${provider.categories[0]} service` : "Service",
         scheduledAt: dayjs(scheduledAt).toISOString(),
         durationHours,
@@ -32,16 +32,62 @@ export default function BookingModal({ provider, open, onClose, onBooked }) {
       };
 
       const res = await client.post("/bookings", payload);
-      onBooked && onBooked(res.data.data);
-      onClose();
-      // reset
+
+      // Accept multiple possible backend shapes:
+      // 1) { data: booking } (single booking)
+      // 2) { data: { master: ..., provider: ... } } (two docs)
+      // 3) { data: { booking: ... } }
+      const data = res?.data || {};
+      let masterBooking = null;
+      let providerBooking = null;
+
+      // common patterns
+      if (data.data) {
+        // if data is an object that contains master/provider
+        if (data.data.master || data.data.provider) {
+          masterBooking = data.data.master || null;
+          providerBooking = data.data.provider || null;
+        } else if (Array.isArray(data.data)) {
+          // unlikely, but handle array
+          masterBooking = data.data[0] || null;
+        } else {
+          // single booking object
+          masterBooking = data.data;
+        }
+      } else if (data.booking) {
+        masterBooking = data.booking;
+      } else {
+        // fallback to whole response
+        masterBooking = data;
+      }
+
+      // Call onBooked with both if available, otherwise pass the booking object
+      if (typeof onBooked === "function") {
+        onBooked({ master: masterBooking, provider: providerBooking, booking: masterBooking || providerBooking });
+      }
+
+      // close modal and reset fields
+      onClose && onClose();
       setScheduledAt("");
       setDurationHours(1);
       setAddress("");
       setNotes("");
     } catch (err) {
-      console.error(err);
-      setError(err?.response?.data?.error || "Failed to create booking");
+      console.error("create booking error:", err);
+
+      // friendly messages for common statuses
+      const status = err?.response?.status;
+      const serverMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message;
+
+      if (status === 409) {
+        setError(serverMsg || "Provider not available at the selected time.");
+      } else if (status === 400) {
+        setError(serverMsg || "Invalid booking data.");
+      } else if (status === 401 || status === 403) {
+        setError("You must be logged in to book this provider.");
+      } else {
+        setError(serverMsg || "Failed to create booking. Try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -49,7 +95,7 @@ export default function BookingModal({ provider, open, onClose, onBooked }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={() => { if (!loading) onClose(); }} />
       <form
         onSubmit={handleSubmit}
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-2 p-6 z-10"
@@ -118,6 +164,7 @@ export default function BookingModal({ provider, open, onClose, onBooked }) {
           <button
             type="button"
             onClick={onClose}
+            disabled={loading}
             className="px-4 py-2 rounded-lg border hover:bg-slate-50"
           >
             Cancel

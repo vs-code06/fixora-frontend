@@ -7,13 +7,14 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import ServicesPage from "./pages/ServicesPage";
 import About from "./pages/About";
-import ScrollToTop from "./components/ScrollToTop"; 
+import ScrollToTop from "./components/ScrollToTop";
 import Contact from "./pages/Contact";
 import Hire from "./pages/Hire";
 import ProfilePage from "./pages/Profile";
 import ProviderProfilePage from "./components/ProviderProfilePage";
 import BookingsPage from "./pages/Bookings";
 import ProviderDashboard from "./pages/ProviderDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import ServiceDetails from "./pages/ServiceDetails";
 import ComingSoon from "./pages/ComingSoon";
 
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/profile/:id" element={<ProviderProfilePage />} />
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/dashboard" element={<ProviderDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/services/:slug" element={<ServiceDetails />} />
             <Route path="*" element={<ComingSoon />} />
           </Routes>

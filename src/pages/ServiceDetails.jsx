@@ -206,8 +206,24 @@ export default function ServiceDetails() {
                 Need help estimating the cost of your next project? Get a fast and accurate budget from our experts. We provide transparent pricing and high-quality service every step of the way.
                 </p>
 
-                <button className="mt-8 bg-[#f3c545] text-black font-semibold px-6 py-3 rounded-lg shadow hover:translate-y-0.5 transition-all duration-200 inline-flex items-center gap-2">
-                Get a quote →
+                <button
+                  className="
+                    inline-flex items-center justify-center gap-2 
+                    bg-yellow-400 text-gray-900 font-semibold 
+                    px-6 py-3 rounded-lg shadow 
+                    transition-all duration-300 ease-in-out 
+                    hover:translate-y-1
+                    group
+                    mt-6
+                  "
+                >
+                  Book a Service
+                  <span
+                    aria-hidden
+                    className="transition-transform duration-300 group-hover:translate-x-1"
+                  >
+                    →
+                  </span>
                 </button>
             </div>
             </div>

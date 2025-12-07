@@ -24,7 +24,7 @@ function FavoriteCard({ p, onRemove }) {
           <div className="flex items-start">
             <div className="min-w-0">
               <div className="text-sm font-medium text-slate-900 truncate">{p.name}</div>
-              <div className="text-xs text-slate-500 mt-1 truncate">{(p.categories || []).slice(0,2).join(", ") || p.location?.city || "Provider"}</div>
+              <div className="text-xs text-slate-500 mt-1 truncate">{(p.categories || []).slice(0, 2).join(", ") || p.location?.city || "Provider"}</div>
             </div>
 
             {p.rating !== undefined && p.rating !== null && (
@@ -208,8 +208,24 @@ export default function ProfilePage() {
     e?.preventDefault?.();
     setSaving(true);
     try {
+      let avatarUrl = form.avatarPreview;
+
+      // 1. Upload new avatar if file selected
+      if (form.avatarFile) {
+        const formData = new FormData();
+        formData.append("avatar", form.avatarFile);
+
+        // You might need to adjust client to handle multipart/form-data correctly if it doesn't auto-detect
+        // axios usually handles it if you pass FormData.
+        const uploadRes = await client.post("/profile/me/avatar", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        avatarUrl = uploadRes.data.avatar;
+      }
+
+      // 2. Update profile details
       const payload = {
-        avatar: form.avatarPreview,
+        avatar: avatarUrl,
         phone: form.phone,
         bio: form.bio,
         location: {
@@ -221,10 +237,11 @@ export default function ProfilePage() {
         },
       };
       if (user && user.role === "provider") payload.categories = form.categories;
+
       const res = await client.put("/profile/me", payload);
       setUser(res.data.user);
       setOpenEdit(false);
-      setForm((f) => ({ ...f, categories: res.data.user.categories || [] }));
+      setForm((f) => ({ ...f, categories: res.data.user.categories || [], avatarFile: null, avatarPreview: res.data.user.avatar }));
       setCategoryText("");
     } catch (err) {
       console.error(err);

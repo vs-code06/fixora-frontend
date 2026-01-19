@@ -7,11 +7,11 @@ export default function Signup() {
     name: "",
     email: "",
     password: "",
-    role: "user", 
+    role: "user",
   });
   const [err, setErr] = useState("");
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup, guestLogin } = useAuth();
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -19,7 +19,7 @@ export default function Signup() {
     e.preventDefault();
     setErr("");
     try {
-      await signup(form.name, form.email, form.password, form.role); 
+      await signup(form.name, form.email, form.password, form.role);
       navigate("/");
     } catch (e) {
       setErr(e.response?.data?.message || "Signup failed");
@@ -113,6 +113,23 @@ export default function Signup() {
           <button className="w-full h-11 rounded-lg bg-yellow-400 hover:bg-yellow-500 transition font-semibold text-gray-900">
             Sign up
           </button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await guestLogin();
+                  navigate("/");
+                } catch (e) {
+                  setErr("Guest login failed");
+                }
+              }}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            >
+              Login as Guest &rarr;
+            </button>
+          </div>
         </form>
 
         {/* Footer */}

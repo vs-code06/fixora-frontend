@@ -220,7 +220,19 @@ export default function ProviderDashboard() {
   // open confirm or price modal
   function openConfirm(booking, action) {
     if (action.next === "completed") {
-      // open price modal flow
+      // If already paid online, skip the price modal and simply complete it
+      if (booking.paymentStatus === "paid") {
+        setConfirmPayload({
+          bookingId: booking._id,
+          nextStatus: "completed",
+          label: "Complete",
+          booking,
+        });
+        setConfirmOpen(true);
+        return;
+      }
+
+      // key flow: otherwise open price modal
       setPriceBooking(booking);
       setPriceModalOpen(true);
       return;
@@ -267,10 +279,10 @@ export default function ProviderDashboard() {
   // partition: Active vs Archive
   const active = bookings
     .filter((b) => ["pending", "accepted", "in_progress"].includes(b.status || "pending"))
-    .sort((a,b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+    .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
   const archive = bookings
-    .filter((b) => ["completed","rejected","cancelled"].includes(b.status || ""))
-    .sort((a,b) => new Date(b.scheduledAt) - new Date(a.scheduledAt));
+    .filter((b) => ["completed", "rejected", "cancelled"].includes(b.status || ""))
+    .sort((a, b) => new Date(b.scheduledAt) - new Date(a.scheduledAt));
 
   // Earnings per month (last 6 months)
   const months = lastNMonths(6);
@@ -373,19 +385,24 @@ export default function ProviderDashboard() {
                         {b.status.replace("_", " ")}
                       </motion.span>
 
+                      {b.paymentStatus === "paid" && (
+                        <span className="inline-block ml-2 px-2 py-0.5 text-[10px] uppercase font-bold text-green-700 bg-green-100 rounded border border-green-200">
+                          Paid
+                        </span>
+                      )}
+
                       <div className="flex gap-2">
                         {statusActions[b.status]?.map(action => (
                           <button
                             key={action.next}
                             onClick={() => openConfirm(b, action)}
                             disabled={updatingId === b._id}
-                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${
-                              action.variant === "primary"
-                                ? "bg-[#57A7F4] text-white hover:bg-[#4b91d6]"
-                                : action.variant === "danger"
+                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${action.variant === "primary"
+                              ? "bg-[#57A7F4] text-white hover:bg-[#4b91d6]"
+                              : action.variant === "danger"
                                 ? "bg-red-500 text-white hover:bg-red-600"
                                 : "border text-slate-600 hover:bg-slate-100"
-                            }`}
+                              }`}
                           >
                             {updatingId === b._id ? "…" : action.label}
                           </button>
@@ -458,7 +475,7 @@ export default function ProviderDashboard() {
                 <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={(v) => `₹${v}`} />
                 <Tooltip formatter={(value) => `₹${value}`} />
-                <Bar dataKey="earnings" fill="#57A7F4" radius={[6,6,0,0]} />
+                <Bar dataKey="earnings" fill="#57A7F4" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

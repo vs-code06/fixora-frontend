@@ -24,12 +24,18 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await client.post("/auth/login", { email, password });
-    setUser(data.user); 
+    setUser(data.user);
     return data.user;
   };
 
   const signup = async (name, email, password, role) => {
-    const { data } = await client.post("/auth/signup", { name, email, password,role });
+    const { data } = await client.post("/auth/signup", { name, email, password, role });
+    setUser(data.user);
+    return data.user;
+  };
+
+  const guestLogin = async () => {
+    const { data } = await client.post("/auth/guest-login");
     setUser(data.user);
     return data.user;
   };
@@ -39,7 +45,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const value = { user, setUser, login, signup, logout, bootstrapping };
+  const value = { user, setUser, login, signup, guestLogin, logout, bootstrapping };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 };
 

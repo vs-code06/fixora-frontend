@@ -6,7 +6,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [err, setErr] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, guestLogin } = useAuth();
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -76,6 +76,23 @@ export default function Login() {
           >
             Log in
           </button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await guestLogin();
+                  navigate("/");
+                } catch (e) {
+                  setErr("Guest login failed");
+                }
+              }}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            >
+              Login as Guest &rarr;
+            </button>
+          </div>
         </form>
 
         {/* Footer */}
